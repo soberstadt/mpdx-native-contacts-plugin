@@ -18,6 +18,13 @@
         </intent-filter>
         <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/authenticator" />
       </service>
+      <provider android:authorities="org.mpdx" android:exported="false" android:name=".nativecontacts.ContactsProvider" />
+      <service android:exported="true" android:name=".nativecontacts.SyncService">
+        <intent-filter>
+          <action android:name="android.content.SyncAdapter" />
+        </intent-filter>
+        <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/syncadapter" />
+      </service>
     </config-file>
 
     <config-file target="AndroidManifest.xml" parent="/*">
@@ -31,6 +38,13 @@
       <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
     </config-file>
 
+    <source-file src="src/android/xml/authenticator.xml" target-dir="res/xml" />
+    <source-file src="src/android/xml/syncadapter.xml" target-dir="res/xml" />
+
     <source-file src="src/android/NativeContactsPlugin.java" target-dir="src/org/mpdx/nativecontacts" />
+    <source-file src="src/android/ContactsJSONParser.java" target-dir="src/org/mpdx/nativecontacts" />
+    <source-file src="src/android/ContactsProvider.java" target-dir="src/org/mpdx/nativecontacts" />
+    <source-file src="src/android/SyncAdapter.java" target-dir="src/org/mpdx/nativecontacts" />
+    <source-file src="src/android/SyncService.java" target-dir="src/org/mpdx/nativecontacts" />
   </platform>
 </plugin>
