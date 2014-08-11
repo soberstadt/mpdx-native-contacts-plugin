@@ -56,7 +56,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
      * Content resolver, for performing database operations.
      */
     private final ContentResolver mContentResolver;
-//	private final ContactAccessor mContactAccessor;
+//  private final ContactAccessor mContactAccessor;
 
     /**
      * Project used when querying content provider. Returns all known fields.
@@ -77,7 +77,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
      * Constructor. Obtains handle to content resolver for later use.
      */
     @SuppressLint("NewApi")
-	public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
+    public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);
 //        mContactAccessor = new ContactAccessor(context);
         mContentResolver = context.getContentResolver();
@@ -102,10 +102,10 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
                               ContentProviderClient provider, SyncResult syncResult) {
         Log.i(TAG, "Beginning network synchronization");
         try {
-        	List<NameValuePair> qparams = new ArrayList<NameValuePair>();
+            List<NameValuePair> qparams = new ArrayList<NameValuePair>();
             qparams.add(new BasicNameValuePair("access_token", "71bc66990725f07a843d8aafa7d5d59c"));
             qparams.add(new BasicNameValuePair("include", "people,phone_numbers,Contact.id,Contact.name,Person.first_name,Person.last_name,Person.id,Person.phone_numbers"));
-            qparams.add(new BasicNameValuePair("limit", "400"));
+            qparams.add(new BasicNameValuePair("limit", "1000"));
             URI uri = URIUtils.createURI("https", "mpdx.org", -1, "/api/v1/contacts",
                                          URLEncodedUtils.format(qparams, "UTF-8"), null);
             final URL location = uri.toURL();
@@ -140,38 +140,38 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
             syncResult.databaseError = true;
             return;
         } catch (URISyntaxException e) {
-        	Log.e(TAG, "Error updating database: " + e.toString());
+            Log.e(TAG, "Error updating database: " + e.toString());
             syncResult.databaseError = true;
             return;
         } catch (RemoteException e) {
-        	Log.e(TAG, "Error updating database: " + e.toString());
+            Log.e(TAG, "Error updating database: " + e.toString());
             syncResult.databaseError = true;
             return;
         } catch (OperationApplicationException e) {
-        	Log.e(TAG, "Error updating database: " + e.toString());
+            Log.e(TAG, "Error updating database: " + e.toString());
             syncResult.databaseError = true;
             return;
-		}
+        }
         Log.i(TAG, "Network synchronization complete");
     }
 
     private List<ContactsJSONParser.ContactEntry> parseJSON(InputStream stream) throws UnsupportedEncodingException, IOException, JSONException {
-    	final ContactsJSONParser contactsParser = new ContactsJSONParser();
+        final ContactsJSONParser contactsParser = new ContactsJSONParser();
 
         Log.i(TAG, "Parsing stream as JSON feed");
         return contactsParser.parse(stream);
-	}
+    }
 
-	protected void updateLocalContactData(final List<ContactsJSONParser.ContactEntry> entries,
-			   							  final SyncResult syncResult, final Account account)
+    protected void updateLocalContactData(final List<ContactsJSONParser.ContactEntry> entries,
+                                          final SyncResult syncResult, final Account account)
             throws JSONException, IOException, OperationApplicationException, RemoteException {
-		HashMap<Integer, ContactsJSONParser.ContactEntry> entryMap = new HashMap<Integer, ContactsJSONParser.ContactEntry>();
-//		SparseArray<ContactsJSONParser.ContactEntry> entryMap = new SparseArray<ContactsJSONParser.ContactEntry>();
+        HashMap<Integer, ContactsJSONParser.ContactEntry> entryMap = new HashMap<Integer, ContactsJSONParser.ContactEntry>();
+//      SparseArray<ContactsJSONParser.ContactEntry> entryMap = new SparseArray<ContactsJSONParser.ContactEntry>();
         for (ContactsJSONParser.ContactEntry e : entries) {
             entryMap.put(e.id, e);
         }
 
-    	// get existing entries
+        // get existing entries
         Log.i(TAG, "Fetching local contacts for merge");
         Uri rawContactUri = RawContacts.CONTENT_URI.buildUpon()
                 .appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
@@ -181,35 +181,35 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         assert c != null;
         Log.i(TAG, "Found " + c.getCount() + " local contacts. Computing merge solution...");
 
-    	// remove existing entries
+        // remove existing entries
         int id;
-//	    String firstName;
-//	    String lastName;
-	    while (c.moveToNext()) {
-	        syncResult.stats.numEntries++;
-	        id = c.getInt(0);
-	        ContactsJSONParser.ContactEntry match = entryMap.remove(id);
-	        if(match != null) {
-	        	Log.d(TAG, match.firstName+" "+match.lastName+" exists.");
-	        	// update old ones
-	        } else
-	        	Log.d(TAG, "contact with id doesn't exist: "+id+" "+c.getColumnCount()+"columns");
-	    }
+//      String firstName;
+//      String lastName;
+        while (c.moveToNext()) {
+            syncResult.stats.numEntries++;
+            id = c.getInt(0);
+            ContactsJSONParser.ContactEntry match = entryMap.remove(id);
+            if(match != null) {
+                Log.d(TAG, match.firstName+" "+match.lastName+" exists.");
+                // update old ones
+            } else
+                Log.d(TAG, "contact with id doesn't exist: "+id+" "+c.getColumnCount()+"columns");
+        }
 
-    	// add new entries
-//	    ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
-		for (ContactsJSONParser.ContactEntry e : entryMap.values()) {
-			if(e.getPhoneNumbers().length != 0) {
-				Log.d(TAG, "save: "+e.firstName+" "+e.lastName+" id:"+e.id);
-				createContactEntry(e, account);
-//				ops.addAll(generateCreateContactOperations(e, account));
-//				mContentResolver.applyBatch(ContactsContract.AUTHORITY, ops);
-			}
-		}
+        // add new entries
+//      ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+        for (ContactsJSONParser.ContactEntry e : entryMap.values()) {
+            if(e.getPhoneNumbers().length != 0) {
+                Log.d(TAG, "save: "+e.firstName+" "+e.lastName+" id:"+e.id);
+                createContactEntry(e, account);
+//              ops.addAll(generateCreateContactOperations(e, account));
+//              mContentResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+            }
+        }
     }
 
     protected void createContactEntry(ContactsJSONParser.ContactEntry contact, Account account) {
-    	ArrayList<ContentProviderOperation> ops = generateCreateContactOperations(contact, account);
+        ArrayList<ContentProviderOperation> ops = generateCreateContactOperations(contact, account);
 
         // Ask the Contact provider to create a new contact
         Log.i(TAG,"Creating contact: " + contact.getFullName());
@@ -222,13 +222,13 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     protected ArrayList<ContentProviderOperation> generateCreateContactOperations(
-    		ContactsJSONParser.ContactEntry contact, Account account) {
-    	String contact_id = Integer.toString(contact.id);
-    	String name = contact.getFullName();
-    	String[] phoneNumbers = contact.getPhoneNumbers();
-    	int phoneType = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE;
+            ContactsJSONParser.ContactEntry contact, Account account) {
+        String contact_id = Integer.toString(contact.id);
+        String name = contact.getFullName();
+        String[] phoneNumbers = contact.getPhoneNumbers();
+        int phoneType = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE;
 
-    	// Note: We use RawContacts because this data must be associated with a particular account.
+        // Note: We use RawContacts because this data must be associated with a particular account.
         //       The system will aggregate this with any other data for this contact and create a
         //       coresponding entry in the ContactsContract.Contacts provider for us.
         ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
@@ -244,14 +244,14 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
                 .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
                 .build());
         for(int i = 0; i < phoneNumbers.length; i++) {
-        	String phone = phoneNumbers[i];
-        	ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-        			.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-        			.withValue(ContactsContract.Data.MIMETYPE,
-        					ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-        					.withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone)
-        					.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, phoneType)
-        					.build());
+            String phone = phoneNumbers[i];
+            ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(ContactsContract.Data.MIMETYPE,
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone)
+                            .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, phoneType)
+                            .build());
         }
         return ops;
     }
