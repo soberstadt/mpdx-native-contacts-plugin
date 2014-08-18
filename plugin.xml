@@ -17,11 +17,9 @@
       <service android:exported="false" android:name="org.mpdx.nativecontacts.NativeContactsService">
         <intent-filter>
           <action android:name="android.accounts.AccountAuthenticator" />
-        </intent-filter>
-        <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/authenticator" />
-        <intent-filter>
           <action android:name="android.content.SyncAdapter" />
         </intent-filter>
+        <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/authenticator" />
         <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/syncadapter" />
       </service>
       <provider android:authorities="org.mpdx" android:exported="false" android:name="org.mpdx.nativecontacts.ContactsProvider" />
