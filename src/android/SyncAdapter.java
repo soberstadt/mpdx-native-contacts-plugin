@@ -19,6 +19,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
