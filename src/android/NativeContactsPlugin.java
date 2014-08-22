@@ -12,7 +12,7 @@ import android.os.Bundle;
 
 public class NativeContactsPlugin extends CordovaPlugin {
 
-    private static final String ACCOUNT_TYPE = "org.mpdx";
+    public static final String ACCOUNT_TYPE = "org.mpdx";
     public static final String ACTION_ADD_ACCOUNT = "addAccount";
     public static final String ACTION_START_SYNC = "startSync";
     public static final String ACTION_REMOVE_ACCOUNT = "removeAccount";
@@ -40,40 +40,48 @@ public class NativeContactsPlugin extends CordovaPlugin {
         return false;
     }
 
-    private void addAccount(String name, String accessToken, CallbackContext callbackContext) {
-        if(name != null && name.length() > 0 && accessToken != null && accessToken.length() > 0) {
-            Account account = new Account(name, ACCOUNT_TYPE);
-            if(false == mManager.addAccountExplicitly(account, null, null)) {
-                callbackContext.error("Account with username already exists!");
+    private void addAccount(final String name, final String accessToken, final CallbackContext callbackContext) {
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                if(name != null && name.length() > 0 && accessToken != null && accessToken.length() > 0) {
+                    Account account = new Account(name, ACCOUNT_TYPE);
+                    if(false == mManager.addAccountExplicitly(account, null, null)) {
+                        callbackContext.error("Account with username already exists!");
+                    }
+                    mManager.setAuthToken(account, ACCOUNT_TYPE, accessToken);
+                    callbackContext.success("Account added.");
+                } else {
+                    callbackContext.error("Expected two non-empty string arguments.");
+                }
             }
-            mManager.setAuthToken(account, ACCOUNT_TYPE, accessToken);
-            callbackContext.success("Account added.");
-        } else {
-            callbackContext.error("Expected two non-empty string arguments.");
-        }
+        });
     }
 
     private void removeAccount(CallbackContext callbackContext) {
         callbackContext.success("Not implemented yet.");
     }
 
-    private void startSync(CallbackContext callbackContext) {
-        Account[] accounts = mManager.getAccountsByType(ACCOUNT_TYPE);
-        if(accounts.length == 0) {
-            callbackContext.error("Expected account to exist.");
-            return;
-        }
-        if(mManager.peekAuthToken(accounts[0], ACCOUNT_TYPE) == null) {
-            callbackContext.error("Expected account to have auth token.");
-            return;
-        }
-        Bundle b = new Bundle();
-        b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-        b.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-        ContentResolver.requestSync(
-                accounts[0],
-                ACCOUNT_TYPE,
-                b);
-        callbackContext.success("Sync started!");
+    private void startSync(final CallbackContext callbackContext) {
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                Account[] accounts = mManager.getAccountsByType(ACCOUNT_TYPE);
+                if(accounts.length == 0) {
+                    callbackContext.error("Expected account to exist.");
+                    return;
+                }
+                if(mManager.peekAuthToken(accounts[0], ACCOUNT_TYPE) == null) {
+                    callbackContext.error("Expected account to have auth token.");
+                    return;
+                }
+                Bundle b = new Bundle();
+                b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+                b.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                ContentResolver.requestSync(
+                        accounts[0],
+                        ACCOUNT_TYPE,
+                        b);
+                callbackContext.success("Sync started!");
+            }
+        });
     }
 }
