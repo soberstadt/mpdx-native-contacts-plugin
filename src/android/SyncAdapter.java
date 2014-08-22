@@ -102,8 +102,9 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
                               ContentProviderClient provider, SyncResult syncResult) {
         Log.i(TAG, "Beginning network synchronization");
         try {
+            AccountManager accountManager = AccountManager.get(getContext());
             List<NameValuePair> qparams = new ArrayList<NameValuePair>();
-            qparams.add(new BasicNameValuePair("access_token", "71bc66990725f07a843d8aafa7d5d59c"));
+            qparams.add(new BasicNameValuePair("access_token", accountManager.peekAuthToken(account, NativeContactsPlugin.ACCOUNT_TYPE)));
             qparams.add(new BasicNameValuePair("include", "people,phone_numbers,Contact.id,Contact.name,Person.first_name,Person.last_name,Person.id,Person.phone_numbers"));
             qparams.add(new BasicNameValuePair("limit", "1000"));
             URI uri = URIUtils.createURI("https", "mpdx.org", -1, "/api/v1/contacts",
