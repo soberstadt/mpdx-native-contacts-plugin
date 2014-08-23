@@ -15,7 +15,7 @@ public class NativeContactsPlugin extends CordovaPlugin {
     public static final String ACCOUNT_TYPE = "org.mpdx";
     public static final String ACTION_ADD_ACCOUNT = "addAccount";
     public static final String ACTION_START_SYNC = "startSync";
-    public static final String ACTION_REMOVE_ACCOUNT = "removeAccount";
+    public static final String ACTION_REMOVE_ACCOUNT = "removeAccounts";
     private AccountManager mManager;
 
     @Override
@@ -30,7 +30,7 @@ public class NativeContactsPlugin extends CordovaPlugin {
             return true;
         }
         if(ACTION_REMOVE_ACCOUNT.equals(action)) {
-            this.removeAccount(callbackContext);
+            this.removeAccounts(callbackContext);
             return true;
         }
         if(ACTION_START_SYNC.equals(action)) {
@@ -57,8 +57,26 @@ public class NativeContactsPlugin extends CordovaPlugin {
         });
     }
 
-    private void removeAccount(CallbackContext callbackContext) {
-        callbackContext.success("Not implemented yet.");
+    private void removeAccounts(final CallbackContext callbackContext) {
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                Account[] accounts = mManager.getAccounts();
+                for (int i = 0; i < accounts.length; i++) {
+                    try {
+                        Boolean success = mManager.removeAccount(accounts[i], null, null).getResult();
+                        if(!success) {
+                            callbackContext.error("Unable to remove account.");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        callbackContext.error("Error while removing account.");
+                        e.printStackTrace();
+                        return;
+                    }
+                }
+                callbackContext.success("Account(s) removed.");
+            }
+        });
     }
 
     private void startSync(final CallbackContext callbackContext) {
