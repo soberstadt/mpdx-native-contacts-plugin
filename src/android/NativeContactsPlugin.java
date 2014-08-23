@@ -47,6 +47,7 @@ public class NativeContactsPlugin extends CordovaPlugin {
                     Account account = new Account(name, ACCOUNT_TYPE);
                     if(false == mManager.addAccountExplicitly(account, null, null)) {
                         callbackContext.error("Account with username already exists!");
+                        return;
                     }
                     mManager.setAuthToken(account, ACCOUNT_TYPE, accessToken);
                     callbackContext.success("Account added.");
